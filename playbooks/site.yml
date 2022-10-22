@@ -1,3 +1,3 @@
 ---
-- hosts: all
+- hosts: nfs, webservers, db, lb
 - import_playbook: ../static-assignments/common.yml
