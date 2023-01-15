@@ -73,61 +73,60 @@ Learn how to install Jenkins here https://www.jenkins.io/doc/book/installing/
 
 Learn how to install artifactory here https://jfrog.com/open-source/
 
-JEnkinsfile for Quick Task
+## JEnkinsfile for Quick Task
 ==================================
 
-          pipeline {
-            agent any
+pipeline {
+  agent any
 
-          stages {
-            stage("Initial cleanup") {
-                  steps {
-                    dir("${WORKSPACE}") {
-                      deleteDir()
-                    }
-                  }
-                }
-            stage('Build') {
-              steps {
-                script {
-                  sh 'echo "Building Stage"'
-                }
-              }
+  stages {
+    stage("Initial cleanup") {
+          steps {
+            dir("${WORKSPACE}") {
+              deleteDir()
             }
-
-            stage('Test') {
-              steps {
-                script {
-                  sh 'echo "Testing Stage"'
-                }
-              }
-            }
-
-            stage('Package'){
-              steps {
-                script {
-                  sh 'echo "Packaging App" '
-                }
-              }
-            }
-
-            stage('Deploy'){
-              steps {
-                script {
-                  sh 'echo "Deploying to Dev"'
-                }
-              }
-
-            }
-            
-            stage("clean Up"){
-              steps {
-                cleanWs()
-            }
-            }
-            
-            }
+          }
         }
+    stage('Build') {
+      steps {
+        script {
+          sh 'echo "Building Stage"'
+        }
+      }
+    }
+
+    stage('Test') {
+      steps {
+        script {
+          sh 'echo "Testing Stage"'
+        }
+      }
+    }
+
+    stage('Package'){
+      steps {
+        script {
+          sh 'echo "Packaging App" '
+        }
+      }
+    }
+
+    stage('Deploy'){
+      steps {
+        script {
+          sh 'echo "Deploying to Dev"'
+        }
+      }
+
+    }
+    
+    stage("clean Up"){
+      steps {
+        cleanWs()
+        }
+      }
+    }
+}
 
 
 ## sonar properties
@@ -233,3 +232,56 @@ sonar.host.url=http://3.125.17.131:9000/sonar/ sonar.projectKey=php-todo #----- 
         stage ('Deploy to Dev Environment') { steps { build job: 'ansible-config/main', parameters: [[$class: 'StringParameterValue', name: 'env', value: 'dev']], propagate: false, wait: true } }
 
         } }
+
+
+## Jenkins Tasks
+==========================================
+
+pipeline {
+  agent any
+
+  environment {
+    ANSIBLE_CONFIG_MGT="${WORKSPACE}/deploy/ansible.cfg"
+    }
+
+  parameters {
+      string(name: 'inventory', defaultValue: 'dev',  description: 'This is the inventory file for the environment to deploy configuration')
+    }
+
+  stages {
+    stage('Initial cleanup') {
+      steps {
+        dir(path: "${WORKSPACE}") {
+          deleteDir()
+        }
+
+      }
+    }
+
+    stage('Checkout SCM') {
+      steps {
+        git(branch: 'main', url: 'https://github.com/lexjox777/ansible-config-mgt.git')
+      }
+    }
+
+    stage('Prepare Ansible For Execution') {
+      steps {
+        sh 'echo ${WORKSPACE}'
+        sh 'sed -i "3 a roles_path=${WORKSPACE}/roles" ${WORKSPACE}/deploy/ansible.cfg'
+      }
+    }
+
+    stage('Run Ansible playbook') {
+      steps {
+        ansiblePlaybook(become: true, credentialsId: 'private-key', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory/dev', playbook: 'playbooks/site.yml')
+      }
+    }
+
+    stage('Clean Workspace after build') {
+      steps {
+        cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenUnstable: true, deleteDirs: true)
+      }
+    }
+  }
+}
+
