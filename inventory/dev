@@ -13,8 +13,8 @@
 
 
 
-# [nfs]
-# 172.31.29.32 ansible_ssh_user='ec2-user'
+#  [nfs]
+# 172.31.29.32 ansible_ssh_user='ec2-user' 
 
 
 [nginx]

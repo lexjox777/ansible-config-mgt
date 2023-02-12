@@ -25,7 +25,7 @@ export JAVA_HOME=$(dirname (readlink (which javac))))) export PATH=$PATH:$JAVA_H
 ### reload the bash profile
 source ~/.bash_profile
 
-Install php
+Install php (RHEL)
 =====================================
 
 yum module reset php -y
@@ -45,11 +45,23 @@ ansible-galaxy collection install community.mysql
 ansible-galaxy collection install community.postgresql
 
 
-Install composer
+Install composer (RHEL)
 =====================================
 
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/bin/composer
+
+Install composer (Ubuntu)
+================================
+
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+sudo mv composer.phar /usr/local/bin/composer
+
+composer --version
+
+
 
 ### Verify Composer is installed or not
 composer --version
